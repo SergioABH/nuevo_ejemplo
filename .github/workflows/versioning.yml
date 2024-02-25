@@ -60,6 +60,9 @@ jobs:
         # Crear una nueva rama temporal
         git branch temp_branch
         
+        # Eliminar la rama temporal local
+        git branch -d temp_branch || true
+        
         # Cambiar a la nueva rama temporal
         git checkout temp_branch
         
@@ -77,7 +80,3 @@ jobs:
         
         # Empujar los cambios en la rama base
         git push origin $base_branch --follow-tags
-        
-        # Eliminar la rama temporal local
-        git branch -d temp_branch
-
