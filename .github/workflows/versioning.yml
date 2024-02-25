@@ -60,21 +60,7 @@ jobs:
         # Volver a la rama base
         git checkout $base_branch
         git status
-        
-        # Realizar el commit con la versión actualizada
-        git commit -am "Update version" || true
-        
-        # Empujar los cambios en la rama base
-        git push origin $base_branch --follow-tags
-        
-        # Fusionar la rama base en la rama de la pull request
-        git checkout $branch_name
-        git status
-        git merge $base_branch
-        
-        # Configurar el seguimiento remoto para la rama de la pull request
-        git branch --set-upstream-to=origin/$branch_name $branch_name
-        
-        # Empujar los cambios en la rama de la pull request
-        git push origin $branch_name --follow-tags
 
+        git checkout $base_branch
+        git status
+        
