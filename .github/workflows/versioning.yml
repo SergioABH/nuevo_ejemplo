@@ -57,8 +57,11 @@ jobs:
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
         
-        # Crear y cambiar a una nueva rama temporal
-        git checkout -b temp_branch
+        # Crear una nueva rama temporal
+        git branch temp_branch
+        
+        # Cambiar a la nueva rama temporal
+        git checkout temp_branch
         
         # Realizar el commit
         git commit -am "Update version" || true
