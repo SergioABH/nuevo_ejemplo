@@ -60,28 +60,21 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
 
-      - name: Checkout the Base Branch
-        run: |
           base_branch=${{ steps.determine_version.outputs.base_branch }}
           branch_name=${{ steps.determine_version.outputs.branch_name }}
 
+          echo "Base branch: $base_branch"
+          echo "Branch name: $branch_name"
+
           git fetch origin $base_branch:$base_branch || true
           git checkout $base_branch || true
-        shell: bash
 
-      - name: Check for errors in the base branch
-        run: |
           git status
           if [[ ! -f "package.json" ]]; then
             echo "Error: No changes in package.json!"
             exit 1
           fi
 
-      - name: Commit and Push Version Update
-        run: |
-          base_branch=${{ steps.determine_version.outputs.base_branch }}
-          branch_name=${{ steps.determine_version.outputs.branch_name }}
-          
           git add .
           git commit -am "Update version: $version" || true
           git checkout $base_branch
