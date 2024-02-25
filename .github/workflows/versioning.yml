@@ -83,9 +83,15 @@ jobs:
             echo "Error: No changes in package.json!"
             exit 1
           fi
-          
+
           git add .
           git commit -am "Update version: $version" || true
           git checkout $base_branch
           git push origin $base_branch --follow-tags || true
+
+          if [[ $branch_name != $base_branch ]]; then
+            git checkout $branch_name || true
+            git merge $base_branch || true
+            git push origin $branch_name --follow-tags || true
+          fi
         shell: bash
