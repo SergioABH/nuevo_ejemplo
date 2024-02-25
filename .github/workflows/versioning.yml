@@ -14,42 +14,78 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-    - name: Set Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '14'
+      - name: Set Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '14'
 
-    - name: Install Dependencies
-      run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-    - name: Determine Version
-      run: |
-        if [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
-          base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
-          branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
-          
-          if [[ $base_branch == 'develop' ]]; then
-            if [[ $branch_name == 'qa' ]]; then
-              npm version minor
-            elif [[ $branch_name == 'main' ]]; then
-              npm version patch
-            elif [[ $branch_name == *feat/* ]]; then
-              npm version preminor
-            elif [[ $branch_name == *fix/* ]]; then
-              npm version prepatch
-            elif [[ $branch_name == hotfix/* ]]; then
-              npm version patch
-            elif [[ $branch_name == prerelease/* ]]; then
-              npm version prerelease --preid=rc
+      - name: Determine Version
+        id: determine_version
+        run: |
+          if [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
+            base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
+            branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
+
+            if [[ $base_branch == 'develop' ]]; then
+              if [[ $branch_name == 'qa' ]]; then
+                npm version minor
+              elif [[ $branch_name == 'main' ]]; then
+                npm version patch
+              elif [[ $branch_name == *feat/* ]]; then
+                npm --no-git-tag-version version preminor
+              elif [[ $branch_name == *fix/* ]]; then
+                npm --no-git-tag-version version prepatch
+              elif [[ $branch_name == hotfix/* ]]; then
+                npm --no-git-tag-version version patch
+              elif [[ $branch_name == prerelease/* ]]; then
+                npm --no-git-tag-version version prerelease --preid=rc
+              fi
             fi
           fi
-        fi
 
-    - name: Push Version Update
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git push --follow-tags
+          echo "::set-output name=base_branch::$base_branch"
+          echo "::set-output name=branch_name::$branch_name"
+
+      - name: Get New Version
+        id: get_version
+        run: echo "::set-output name=version::$(npm --no-git-tag-version version)"
+
+      - name: Commit and Push Version Update
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+
+          # Get base branch and branch name from outputs
+          base_branch=${{ steps.determine_version.outputs.base_branch }}
+          branch_name=${{ steps.determine_version.outputs.branch_name }}
+
+          # Print the base branch and branch name values for verification
+          echo "Base branch: $base_branch"
+          echo "Branch name: $branch_name"
+
+          # Check for errors in the base branch variable
+          if [[ -z "$base_branch" ]]; then
+            echo "Error: Base branch variable is empty!"
+            exit 1
+          fi
+
+          git fetch origin $base_branch:$base_branch || true
+          git checkout $base_branch || true
+
+          git status
+          if [[ ! -f "package.json" ]]; then
+            echo "Error: No changes in package.json!"
+            exit 1
+          fi
+          
+          git add .
+          git commit -am "Update version: $version" || true
+          git checkout $base_branch
+          git push origin $base_branch --follow-tags || true
+        shell: bash
