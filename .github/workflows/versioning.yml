@@ -72,11 +72,24 @@ jobs:
         # Volver a la rama base
         git checkout $base_branch
         
-        # Fusionar la rama temporal en la base (o rebase, según tus preferencias)
+        # Crear una nueva rama de características (puedes personalizar el nombre)
+        git checkout -b feature_branch
+        
+        # Fusionar la rama temporal en la nueva rama de características
         git merge temp_branch
         
-        # Empujar los cambios en la rama base
-        git push origin $base_branch --follow-tags
-
+        # Empujar los cambios en la nueva rama de características
+        git push origin feature_branch --follow-tags
+        
+        # Opcional: Fusionar la nueva rama de características en 'develop'
+        if [[ $base_branch == 'develop' ]]; then
+          git checkout develop
+          git merge feature_branch
+          git push origin develop --follow-tags
+        fi
+        
         # Eliminar la rama temporal local
         git branch -d temp_branch || true
+        
+        # Eliminar la nueva rama de características local
+        git branch -d feature_branch || true
