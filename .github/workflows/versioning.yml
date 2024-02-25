@@ -32,7 +32,7 @@ jobs:
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
             branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
-            if [[ $base_branch == 'develop' ]]; then
+            if [[ $base_branch == 'develop' || $base_branch == 'qa' ]]; then
               if [[ $branch_name == 'qa' ]]; then
                 npm version minor
               elif [[ $branch_name == 'main' ]]; then
@@ -64,10 +64,12 @@ jobs:
           # Get base branch and branch name from outputs
           base_branch=${{ steps.determine_version.outputs.base_branch }}
           branch_name=${{ steps.determine_version.outputs.branch_name }}
+          version=${{ steps.get_version.outputs.version }}
 
           # Print the base branch and branch name values for verification
           echo "Base branch: $base_branch"
           echo "Branch name: $branch_name"
+          echo "Version: $version"
 
           # Check for errors in the base branch variable
           if [[ -z "$base_branch" ]]; then
@@ -85,13 +87,7 @@ jobs:
           fi
 
           git add .
-          git commit -am "Update version: $version" || true
+          git commit -am "Update version" || true
           git checkout $base_branch
-          git push origin $base_branch --follow-tags || true
-
-          if [[ $branch_name != $base_branch ]]; then
-            git checkout $branch_name || true
-            git merge $base_branch || true
-            git push origin $branch_name --follow-tags || true
-          fi
+          git push origin $base_branch --follow-tags || true        
         shell: bash
