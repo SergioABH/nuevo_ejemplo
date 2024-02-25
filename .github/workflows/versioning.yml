@@ -37,9 +37,9 @@ jobs:
             elif [[ $branch_name == 'main' ]]; then
               npm version patch
             elif [[ $branch_name == *feat/* ]]; then
-              npm --no-git-tag-version version prerelease --preid=rc
+              npm --no-git-tag-version version preminor
             elif [[ $branch_name == *fix/* ]]; then
-              npm --no-git-tag-version version prerelease --preid=rc
+              npm --no-git-tag-version version prepatch
             elif [[ $branch_name == hotfix/* ]]; then
               npm --no-git-tag-version version patch
             elif [[ $branch_name == prerelease/* ]]; then
@@ -57,7 +57,24 @@ jobs:
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
         
-        # Se utiliza el HEAD directamente para realizar el commit
+        # Crear y cambiar a una nueva rama temporal
+        git checkout -b temp_branch
+        
+        # Realizar el commit
         git commit -am "Update version" || true
-        # Se utiliza la rama base directamente en lugar de HEAD para el push
+        
+        # Empujar la nueva rama temporal
+        git push origin temp_branch --follow-tags
+        
+        # Volver a la rama base
+        git checkout $base_branch
+        
+        # Fusionar la rama temporal en la base (o rebase, según tus preferencias)
+        git merge temp_branch
+        
+        # Empujar los cambios en la rama base
         git push origin $base_branch --follow-tags
+        
+        # Eliminar la rama temporal local
+        git branch -d temp_branch
+
