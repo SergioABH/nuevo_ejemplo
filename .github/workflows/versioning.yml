@@ -26,7 +26,6 @@ jobs:
         run: npm install
 
       - name: Determine Version
-        id: determine_version
         run: |
           if [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
@@ -49,40 +48,30 @@ jobs:
             fi
           fi
 
-          echo "::set-output name=base_branch::$base_branch"
-          echo "::set-output name=branch_name::$branch_name"
+          echo "Base branch: $base_branch"
+          echo "Branch name: $branch_name"
 
       - name: Get New Version
         id: get_version
         run: echo "::set-output name=version::$(npm --no-git-tag-version version)"
 
-      - name: Commit and Push Version Update
+      - name: Checkout the Base Branch
         run: |
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
+          git fetch origin $base_branch:$base_branch || true
+          git checkout $base_branch || true
+        shell: bash
 
-          # Get base branch and branch name from outputs
-          base_branch=${{ steps.determine_version.outputs.base_branch }}
-          branch_name=${{ steps.determine_version.outputs.branch_name }}
-
-          # Print the base branch and branch name values for verification
-          echo "Base branch: $base_branch"
-          echo "Branch name: $branch_name"
-
-          # Check for errors in the base branch variable
-          if [[ -z "$base_branch" ]]; then
-            echo "Error: Base branch variable is empty!"
+      - name: Check for errors in the base branch
+        run: |
+          git status
+          if [[ ! -f "package.json" ]]; then
+            echo "Error: No changes in package.json!"
             exit 1
           fi
 
-          # Checkout the base branch with error handling
-          git checkout $base_branch || true
-
-          # Check for checkout errors
-          git status
-
+      - name: Commit and Push Version Update
+        run: |
           git add .
-          git commit -am "Update version: $version" || true  # Use the captured version
-
-          # Push the commit to the base branch
-          git push origin $base_branch --follow-tags
+          git commit -am "Update version: $version" || true
+          git push origin $base_branch --follow-tags || true
+        shell: bash
