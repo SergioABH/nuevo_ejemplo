@@ -57,11 +57,12 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
 
+          # Cambiar a la rama base antes de hacer el commit
           git checkout $base_branch
 
-          # No need to switch back to the base branch here
           git add .
-          git commit -am "Update version: $version" || true  # Use the captured version
+          git commit -am "Update version: $version" || true  # Use la versión capturada
 
-          # Push the commit directly to the base branch
+          # Enviar el commit a la rama base
           git push origin $base_branch --follow-tags
+
