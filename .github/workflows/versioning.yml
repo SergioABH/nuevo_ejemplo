@@ -57,12 +57,25 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
 
-          # Cambiar a la rama base antes de hacer el commit
+          # Print the base branch value for verification
+          echo "Base branch: $base_branch"
+
+          # Checkout the base branch
           git checkout $base_branch
 
-          git add .
-          git commit -am "Update version: $version" || true  # Use la versión capturada
+          # Check for checkout errors
+          git status
 
-          # Enviar el commit a la rama base
+          # Optionally, stash uncommitted changes
+          # git stash
+
+          git add .
+          git commit -am "Update version: $version" || true  # Use the captured version
+
+          # Push the commit to the base branch
           git push origin $base_branch --follow-tags
+
+          # Optionally, restore uncommitted changes
+          # git stash pop
+
 
