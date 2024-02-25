@@ -57,39 +57,22 @@ jobs:
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
         
-        # Crear una nueva rama temporal
-        git branch temp_branch
-        
-        # Cambiar a la nueva rama temporal
-        git checkout temp_branch
-        
-        # Realizar el commit
-        git commit -am "Update version" || true
-        
-        # Empujar la nueva rama temporal
-        git push --set-upstream origin temp_branch --follow-tags
-        
         # Volver a la rama base
         git checkout $base_branch
         
-        # Crear una nueva rama de características (puedes personalizar el nombre)
-        git checkout -b feature_branch
+        # Realizar el commit con la versión actualizada
+        git commit -am "Update version" || true
         
-        # Fusionar la rama temporal en la nueva rama de características
-        git merge temp_branch
+        # Empujar los cambios en la rama base
+        git push origin $base_branch --follow-tags
         
-        # Empujar los cambios en la nueva rama de características
-        git push origin feature_branch --follow-tags
+        # Fusionar la rama base en la rama de la pull request
+        git checkout $branch_name
+        git merge $base_branch
         
-        # Opcional: Fusionar la nueva rama de características en 'develop'
-        if [[ $base_branch == 'develop' ]]; then
-          git checkout develop
-          git merge feature_branch
-          git push origin develop --follow-tags
-        fi
+        # Configurar el seguimiento remoto para la rama de la pull request
+        git branch --set-upstream-to=origin/$branch_name $branch_name
         
-        # Eliminar la rama temporal local
-        git branch -d temp_branch || true
-        
-        # Eliminar la nueva rama de características local
-        git branch -d feature_branch || true
+        # Empujar los cambios en la rama de la pull request
+        git push origin $branch_name --follow-tags
+
