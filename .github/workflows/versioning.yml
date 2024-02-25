@@ -26,6 +26,7 @@ jobs:
         run: npm install
 
       - name: Determine Version
+        id: determine_version
         run: |
           if [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
@@ -48,8 +49,8 @@ jobs:
             fi
           fi
 
-          echo "Base branch: $base_branch"
-          echo "Branch name: $branch_name"
+          echo "::set-output name=base_branch::$base_branch"
+          echo "::set-output name=branch_name::$branch_name"
 
       - name: Get New Version
         id: get_version
@@ -60,8 +61,13 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
 
-          # Print the base branch value for verification
+          # Get base branch and branch name from outputs
+          base_branch=${{ steps.determine_version.outputs.base_branch }}
+          branch_name=${{ steps.determine_version.outputs.branch_name }}
+
+          # Print the base branch and branch name values for verification
           echo "Base branch: $base_branch"
+          echo "Branch name: $branch_name"
 
           # Check for errors in the base branch variable
           if [[ -z "$base_branch" ]]; then
@@ -75,14 +81,8 @@ jobs:
           # Check for checkout errors
           git status
 
-          # Optionally, stash uncommitted changes
-          # git stash
-
           git add .
           git commit -am "Update version: $version" || true  # Use the captured version
 
           # Push the commit to the base branch
           git push origin $base_branch --follow-tags
-
-          # Optionally, restore uncommitted changes
-          # git stash pop
