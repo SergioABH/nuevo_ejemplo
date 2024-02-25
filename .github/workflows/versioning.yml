@@ -60,19 +60,24 @@ jobs:
         # Volver a la rama base
         git checkout $base_branch
         
+        # Crear una nueva rama temporal para realizar el commit
+        git checkout -b temp_branch
+        
         # Realizar el commit con la versión actualizada
         git commit -am "Update version" || true
         
         # Empujar los cambios en la rama base
-        git push origin $base_branch --follow-tags
+        git push origin temp_branch --follow-tags
         
         # Fusionar la rama base en la rama de la pull request
         git checkout $branch_name
-        git merge $base_branch
+        git merge temp_branch
         
         # Configurar el seguimiento remoto para la rama de la pull request
         git branch --set-upstream-to=origin/$branch_name $branch_name
         
         # Empujar los cambios en la rama de la pull request
         git push origin $branch_name --follow-tags
-
+        
+        # Eliminar la rama temporal local
+        git branch -d temp_branch || true
