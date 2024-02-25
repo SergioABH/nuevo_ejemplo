@@ -25,39 +25,39 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-- name: Determine Version
-  run: |
-    if [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
-      base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
-      branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
-      
-      if [[ $base_branch == 'develop' ]]; then
-        if [[ $branch_name == 'qa' ]]; then
-          npm version minor
-        elif [[ $branch_name == 'main' ]]; then
-          npm version patch
-        elif [[ $branch_name == *feat/* ]]; then
-          npm --no-git-tag-version version prerelease --preid=rc
-        elif [[ $branch_name == *fix/* ]]; then
-          npm --no-git-tag-version version prerelease --preid=rc
-        elif [[ $branch_name == hotfix/* ]]; then
-          npm --no-git-tag-version version patch
-        elif [[ $branch_name == prerelease/* ]]; then
-          npm --no-git-tag-version version prerelease --preid=rc
+    - name: Determine Version
+      run: |
+        if [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
+          base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
+          branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
+          
+          if [[ $base_branch == 'develop' ]]; then
+            if [[ $branch_name == 'qa' ]]; then
+              npm version minor
+            elif [[ $branch_name == 'main' ]]; then
+              npm version patch
+            elif [[ $branch_name == *feat/* ]]; then
+              npm --no-git-tag-version version prerelease --preid=rc
+            elif [[ $branch_name == *fix/* ]]; then
+              npm --no-git-tag-version version prerelease --preid=rc
+            elif [[ $branch_name == hotfix/* ]]; then
+              npm --no-git-tag-version version patch
+            elif [[ $branch_name == prerelease/* ]]; then
+              npm --no-git-tag-version version prerelease --preid=rc
+            fi
+          fi
         fi
-      fi
-    fi
 
-- name: Get New Version
-  id: get_version
-  run: echo "::set-output name=version::$(npm --no-git-tag-version version)"
+    - name: Get New Version
+      id: get_version
+      run: echo "::set-output name=version::$(npm --no-git-tag-version version)"
 
-- name: Commit and Push Version Update
-  run: |
-    git config --local user.email "actions@github.com"
-    git config --local user.name "GitHub Actions"
-    git checkout $base_branch
-    sed -i "s/version\": \".*\"/version\": \"${{ steps.get_version.outputs.version }}\"/" package.json
-    git commit -am "Update version" || true
-    git push origin $base_branch --follow-tags
+    - name: Commit and Push Version Update
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Actions"
+        git checkout $base_branch
+        sed -i "s/version\": \".*\"/version\": \"${{ steps.get_version.outputs.version }}\"/" package.json
+        git commit -am "Update version" || true
+        git push origin $base_branch --follow-tags
 
