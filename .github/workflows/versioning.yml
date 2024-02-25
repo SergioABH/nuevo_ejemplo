@@ -60,4 +60,5 @@ jobs:
 
     - name: Push Version Update
       run: |
-        git push --follow-tags
+        git checkout $base_branch
+        git push origin $base_branch --follow-tags
