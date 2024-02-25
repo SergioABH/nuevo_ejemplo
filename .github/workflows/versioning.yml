@@ -89,11 +89,5 @@ jobs:
           git add .
           git commit -am "Update version: $version" || true
           git checkout $base_branch
-          git push origin $base_branch --follow-tags || true
-          
-          git checkout $branch_name
-          git fetch origin $branch_name:$branch_name || true
-          git add .
-          git commit -am "Update version: $version" || true
-          git push origin $branch_name --follow-tags || true          
+          git push origin $base_branch --follow-tags || true        
         shell: bash
