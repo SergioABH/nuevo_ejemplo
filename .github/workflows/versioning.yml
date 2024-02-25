@@ -58,7 +58,5 @@ jobs:
           fi
         fi
 
-    - name: Push Version Update
-      run: |
-        git checkout $base_branch
         git push origin $base_branch --follow-tags
+        
