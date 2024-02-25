@@ -57,6 +57,7 @@ jobs:
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
         
-        # Se utiliza el HEAD directamente para realizar el commit y el push sin cambiar de rama
+        # Se utiliza el HEAD directamente para realizar el commit
         git commit -am "Update version" || true
-        git push origin HEAD:$base_branch --follow-tags
+        # Se utiliza la rama base directamente en lugar de HEAD para el push
+        git push origin $base_branch --follow-tags
