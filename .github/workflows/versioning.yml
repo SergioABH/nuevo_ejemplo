@@ -1,0 +1,55 @@
+name: Versioning
+
+on:
+  pull_request:
+    branches:
+      - main
+      - qa
+      - develop
+      - hotfix/*
+      - prerelease/*
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '14'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Determine Version
+      run: |
+        if [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
+          base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
+          branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
+          
+          if [[ $base_branch == 'develop' ]]; then
+            if [[ $branch_name == 'qa' ]]; then
+              npm version minor
+            elif [[ $branch_name == 'main' ]]; then
+              npm version patch
+            elif [[ $branch_name == *feat/* ]]; then
+              npm version preminor
+            elif [[ $branch_name == *fix/* ]]; then
+              npm version prepatch
+            elif [[ $branch_name == hotfix/* ]]; then
+              npm version patch
+            elif [[ $branch_name == prerelease/* ]]; then
+              npm version prerelease --preid=rc
+            fi
+          fi
+        fi
+
+    - name: Push Version Update
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git push --follow-tags
