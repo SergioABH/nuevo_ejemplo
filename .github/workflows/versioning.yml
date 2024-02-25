@@ -48,8 +48,8 @@ jobs:
             fi
           fi
 
-          echo "Base branch: $base_branch"
-          echo "Branch name: $branch_name"
+          echo "::set-output name=base_branch::$base_branch"
+          echo "::set-output name=branch_name::$branch_name"
 
       - name: Get New Version
         id: get_version
@@ -62,6 +62,9 @@ jobs:
 
       - name: Checkout the Base Branch
         run: |
+          base_branch=${{ steps.determine_version.outputs.base_branch }}
+          branch_name=${{ steps.determine_version.outputs.branch_name }}
+
           git fetch origin $base_branch:$base_branch || true
           git checkout $base_branch || true
         shell: bash
@@ -76,6 +79,9 @@ jobs:
 
       - name: Commit and Push Version Update
         run: |
+          base_branch=${{ steps.determine_version.outputs.base_branch }}
+          branch_name=${{ steps.determine_version.outputs.branch_name }}
+          
           git add .
           git commit -am "Update version: $version" || true
           git checkout $base_branch
