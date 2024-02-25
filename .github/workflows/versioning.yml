@@ -56,8 +56,7 @@ jobs:
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
-        git checkout $base_branch
-        sed -i "s/version\": \".*\"/version\": \"${{ steps.get_version.outputs.version }}\"/" package.json
+        
+        # Se utiliza el HEAD directamente para realizar el commit y el push sin cambiar de rama
         git commit -am "Update version" || true
-        git push origin $base_branch --follow-tags
-
+        git push origin HEAD:$base_branch --follow-tags
