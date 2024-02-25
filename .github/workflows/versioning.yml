@@ -48,6 +48,9 @@ jobs:
             fi
           fi
 
+          echo "Base branch: $base_branch"
+          echo "Branch name: $branch_name"
+
       - name: Get New Version
         id: get_version
         run: echo "::set-output name=version::$(npm --no-git-tag-version version)"
@@ -60,8 +63,14 @@ jobs:
           # Print the base branch value for verification
           echo "Base branch: $base_branch"
 
-          # Checkout the base branch
-          git checkout $base_branch
+          # Check for errors in the base branch variable
+          if [[ -z "$base_branch" ]]; then
+            echo "Error: Base branch variable is empty!"
+            exit 1
+          fi
+
+          # Checkout the base branch with error handling
+          git checkout $base_branch || true
 
           # Check for checkout errors
           git status
@@ -77,5 +86,3 @@ jobs:
 
           # Optionally, restore uncommitted changes
           # git stash pop
-
-
