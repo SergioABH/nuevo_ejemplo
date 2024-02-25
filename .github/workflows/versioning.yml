@@ -32,7 +32,7 @@ jobs:
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
             branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
-            if [[ $base_branch == 'develop' ]]; then
+            if [[ $base_branch == 'develop' || $base_branch == 'qa' ]]; then
               if [[ $branch_name == 'qa' ]]; then
                 npm version minor
               elif [[ $branch_name == 'main' ]]; then
