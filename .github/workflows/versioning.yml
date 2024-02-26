@@ -52,22 +52,22 @@ jobs:
                 npm --no-git-tag-version version patch
               fi
             fi
-          elif [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
-            if [[ $base_branch == 'qa' ]]; then
-              if [[ $branch_name == 'develop' ]]; then
+          
+          elif [[ $base_branch == 'qa' ]]; then
+            if [[ $branch_name == 'develop' ]]; then
+              if [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version minor
-              elif [[ $branch_name == *fix/* ]]; then
-                npm --no-git-tag-version version patch
               fi
-            elif [[ $base_branch == *prerelease/* ]]; then
-              if [[ $branch_name == 'qa' ]]; then
-                npm --no-git-tag-version version prerelease --preid=rc
-              fi
-            elif [[ $base_branch == 'main' ]]; then
-              if [[ $branch_name == *hotfix/* ]]; then
+            fi
+          
+          elif [[ $base_branch == 'main' ]]; then
+            if [[ $branch_name == *hotfix/* ]]; then
+              if [[ ${{ github.event.action }} == 'opened' ]]; then
+                npm --no-git-tag-version version prepatch
+              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                npm --no-git-tag-version version prerelease
+              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version patch
-              elif [[ $branch_name == *prerelease/* ]]; then
-                npm --no-git-tag-version version major
               fi
             fi
           fi
