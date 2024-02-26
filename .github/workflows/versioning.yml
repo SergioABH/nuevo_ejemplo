@@ -68,12 +68,6 @@ jobs:
                 npm --no-git-tag-version version prerelease
               elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version patch
-            
-            elif [[ $branch_name == 'main' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
-              if git log --merges -n 1 --pretty=format:'%B' | grep -q 'BREAKING CHANGE'; then
-                npm --no-git-tag-version version major
-              else
-                npm --no-git-tag-version version minor
               fi
             fi
           fi
