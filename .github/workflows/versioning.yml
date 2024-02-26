@@ -44,7 +44,7 @@ jobs:
               if [[ $branch_name == 'develop' ]]; then
                 npm --no-git-tag-version version minor
               elif [[ $branch_name == *fix/* ]]; then
-                npm npm --no-git-tag-version version patch
+                npm --no-git-tag-version version patch
               fi
             
             elif [[ $base_branch == *prerelease/* ]]; then
