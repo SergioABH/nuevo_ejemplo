@@ -3,6 +3,8 @@ name: Versioning
 on:
   pull_request:
     types:
+      - opened
+      - synchronize
       - closed
 
 jobs:
@@ -35,9 +37,13 @@ jobs:
 
             if [[ $base_branch == 'develop' ]]; then
               if [[ $branch_name == *feat/* ]]; then
-                npm --no-git-tag-version version preminor
-              elif [[ $branch_name == *fix/* ]]; then
-                npm --no-git-tag-version version prepatch
+                if [[ ${{ github.event.action }} == 'opened' ]]; then
+                  npm --no-git-tag-version version preminor
+                elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                  npm --no-git-tag-version version prerelease
+                elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+                  npm --no-git-tag-version version minor
+                fi
               fi
 
             elif [[ $base_branch == 'qa' ]]; then
