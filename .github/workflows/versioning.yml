@@ -48,11 +48,13 @@ jobs:
                 npm --no-git-tag-version version prepatch
               fi
             elif [[ $base_branch == 'qa' ]]; then
-              if [[ $branch_name == 'develop' ]]; then
+              if [[ $branch_name == 'main' ]]; then
+                npm --no-git-tag-version version major
+              elif [[ $branch_name == 'develop' ]]; then
                 npm version minor
               fi
             elif [[ $base_branch == 'main' ]]; then
-              elif [[ $branch_name == *hotfix/* ]]; then
+              if [[ $branch_name == *hotfix/* ]]; then
                 npm --no-git-tag-version version patch
               elif [[ $branch_name == 'qa' ]]; then
                 npm --no-git-tag-version version major
