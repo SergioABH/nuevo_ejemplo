@@ -1,4 +1,4 @@
-name: Versioning
+name: Versioning 2
 
 on:
   pull_request:
@@ -68,20 +68,6 @@ jobs:
                 npm --no-git-tag-version version prerelease
               elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version patch
-              fi
-            elif [[ $branch_name == 'qa' ]]; then
-              if [[ ${{ github.event.action }} == 'opened' ]]; then
-                if git log --merges -n 1 --pretty=format:'%B' | grep -q 'BREAKING CHANGE'; then
-                  npm --no-git-tag-version version prerelease --preid=rc
-                fi
-              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
-                if git log --merges -n 1 --pretty=format:'%B' | grep -q 'BREAKING CHANGE'; then
-                  npm --no-git-tag-version version premajor --preid=rc
-                fi
-              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
-                if git log --merges -n 1 --pretty=format:'%B' | grep -q 'BREAKING CHANGE'; then
-                  npm --no-git-tag-version version major
-                fi
               fi
             fi
           fi
