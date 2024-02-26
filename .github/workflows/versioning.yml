@@ -1,8 +1,10 @@
-name: Versioning
+name: Versioning 2
 
 on:
   pull_request:
     types:
+      - opened
+      - synchronize
       - closed
 
 jobs:
@@ -29,29 +31,30 @@ jobs:
       - name: Determine Version
         id: determine_version
         run: |
-          if [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
-            base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
-            branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
+          base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
+          branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
-            if [[ $base_branch == 'develop' ]]; then
-              if [[ $branch_name == *feat/* ]]; then
+          if [[ $base_branch == 'develop' ]]; then
+            if [[ $branch_name == *feat/* ]]; then
+              if [[ ${{ github.event.action }} == 'opened' ]]; then
                 npm --no-git-tag-version version preminor
-              elif [[ $branch_name == *fix/* ]]; then
-                npm --no-git-tag-version version prepatch
+              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                npm --no-git-tag-version version prerelease
+              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+                npm --no-git-tag-version version minor
               fi
-
-            elif [[ $base_branch == 'qa' ]]; then
+            fi
+          elif [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+            if [[ $base_branch == 'qa' ]]; then
               if [[ $branch_name == 'develop' ]]; then
                 npm --no-git-tag-version version minor
               elif [[ $branch_name == *fix/* ]]; then
                 npm --no-git-tag-version version patch
               fi
-            
             elif [[ $base_branch == *prerelease/* ]]; then
               if [[ $branch_name == 'qa' ]]; then
                 npm --no-git-tag-version version prerelease --preid=rc
               fi
-
             elif [[ $base_branch == 'main' ]]; then
               if [[ $branch_name == *hotfix/* ]]; then
                 npm --no-git-tag-version version patch
@@ -86,3 +89,4 @@ jobs:
           git checkout $base_branch
           git push origin $base_branch --follow-tags || true        
         shell: bash
+
