@@ -3,6 +3,7 @@ name: Versioning
 on:
   pull_request:
     types:
+      - opened
       - closed
 
 jobs:
