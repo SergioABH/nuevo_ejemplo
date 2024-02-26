@@ -1,13 +1,11 @@
 name: Versioning
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
-      - develop
-  push:
-    branches:
       - qa
+      - develop
 
 jobs:
   version:
@@ -33,7 +31,7 @@ jobs:
       - name: Determine Version
         id: determine_version
         run: |
-          if [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
+          if [[ $GITHUB_EVENT_NAME == 'pull_request_target' ]]; then
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
             branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
@@ -43,18 +41,16 @@ jobs:
               elif [[ $branch_name == *fix/* ]]; then
                 npm --no-git-tag-version version prepatch
               fi
+            elif [[ $base_branch == 'qa' ]]; then
+              if [[ $branch_name == 'develop' ]]; then
+                npm version minor
+              fi
             elif [[ $base_branch == 'main' ]]; then
               if [[ $branch_name == *hotfix/* ]]; then
                 npm --no-git-tag-version version patch
               elif [[ $branch_name == *prerelease/* ]]; then
                 npm --no-git-tag-version version prerelease --preid=rc
               fi
-            fi
-
-            elif [[ $GITHUB_EVENT_NAME == 'push' ]]; then
-            base_branch=$(echo $GITHUB_REF | cut -d/ -f3)
-            if [[ $base_branch == 'qa' ]]; then
-              npm version minor
             fi
           fi
 
