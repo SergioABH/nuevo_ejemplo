@@ -4,8 +4,10 @@ on:
   pull_request:
     branches:
       - main
-      - qa
       - develop
+  push:
+    branches:
+      - qa
 
 jobs:
   version:
@@ -41,16 +43,18 @@ jobs:
               elif [[ $branch_name == *fix/* ]]; then
                 npm --no-git-tag-version version prepatch
               fi
-            elif [[ $base_branch == 'qa' ]]; then
-              if [[ $branch_name == 'develop' ]]; then
-                npm version minor
-              fi
             elif [[ $base_branch == 'main' ]]; then
               if [[ $branch_name == *hotfix/* ]]; then
                 npm --no-git-tag-version version patch
               elif [[ $branch_name == *prerelease/* ]]; then
                 npm --no-git-tag-version version prerelease --preid=rc
               fi
+            fi
+
+            elif [[ $GITHUB_EVENT_NAME == 'push' ]]; then
+            base_branch=$(echo $GITHUB_REF | cut -d/ -f3)
+            if [[ $base_branch == 'qa' ]]; then
+              npm version minor
             fi
           fi
 
