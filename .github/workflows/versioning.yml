@@ -3,7 +3,6 @@ name: Versioning 2
 on:
   pull_request:
     types:
-      - opened
       - closed
 
 jobs:
@@ -30,17 +29,7 @@ jobs:
       - name: Determine Version
         id: determine_version
         run: |
-          if [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'opened' ]]; then
-            base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
-            branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
-
-            if [[ $base_branch == 'main' ]]; then
-              if [[ $base_branch == 'qa' ]]; then
-                npm --no-git-tag-version version prerelease --preid=rc
-            fi
-          fi
-
-          elif [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+          if [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
             branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
@@ -50,16 +39,21 @@ jobs:
               elif [[ $branch_name == *fix/* ]]; then
                 npm --no-git-tag-version version prepatch
               fi
+
             elif [[ $base_branch == 'qa' ]]; then
-              if [[ $branch_name == 'main' ]]; then
-                npm --no-git-tag-version version major
-              elif [[ $branch_name == 'develop' ]]; then
-                npm version minor
+              if [[ $branch_name == 'develop' ]]; then
+                npm --no-git-tag-version version minor
               fi
+            
+            elif [[ $base_branch == *prerelease/* ]]; then
+              if [[ $branch_name == 'qa' ]]; then
+                npm --no-git-tag-version version prerelease --preid=rc
+              fi
+
             elif [[ $base_branch == 'main' ]]; then
               if [[ $branch_name == *hotfix/* ]]; then
                 npm --no-git-tag-version version patch
-              elif [[ $branch_name == 'qa' ]]; then
+              elif [[ $branch_name == *prerelease/* ]]; then
                 npm --no-git-tag-version version major
               fi
             fi
@@ -81,21 +75,9 @@ jobs:
           echo "Base branch: $base_branch"
           echo "Branch name: $branch_name"
           echo "Version: $version"
-
-          # Check for errors in the base branch variable
-          if [[ -z "$base_branch" ]]; then
-            echo "Error: Base branch variable is empty!"
-            exit 1
-          fi
-
+          
           git fetch origin $base_branch:$base_branch || true
           git checkout $base_branch || true
-
-          git status
-          if [[ ! -f "package.json" ]]; then
-            echo "Error: No changes in package.json!"
-            exit 1
-          fi
 
           git add .
           git commit -am "Update version" || true
