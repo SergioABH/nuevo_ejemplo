@@ -103,7 +103,9 @@ jobs:
           git add .
           git commit -am "Prerelease version for branch $GITHUB_REF" || true
           git push origin $GITHUB_REF --follow-tags || true
+        shell: bash
 
       - name: Merge to Develop
         if: github.event_name == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' && ${{ steps.determine_version.outputs.base_branch }} == 'develop'
         run: npm version minor && git add . && git commit -m "Version bump to $version" && git push origin develop --follow-tags
+        shell: bash
