@@ -91,3 +91,4 @@ jobs:
           git checkout $base_branch
           git push origin $base_branch --follow-tags || true        
         shell: bash
+        
