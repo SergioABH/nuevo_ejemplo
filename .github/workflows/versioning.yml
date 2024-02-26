@@ -1,8 +1,9 @@
-name: Versioning
+name: Versioning 2
 
 on:
   pull_request:
     types:
+      - opened
       - closed
 
 jobs:
