@@ -31,11 +31,9 @@ jobs:
       - name: Determine Version
         id: determine_version
         run: |
-          if [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
-            base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
-            branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
-
-            if [[ $base_branch == 'develop' ]]; then
+          if [[ $base_branch == 'develop' ]]; then
+          base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
+          branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
               if [[ $branch_name == *feat/* ]]; then
                 if [[ ${{ github.event.action }} == 'opened' ]]; then
                   npm --no-git-tag-version version preminor
@@ -45,7 +43,10 @@ jobs:
                   npm --no-git-tag-version version minor
                 fi
               fi
-
+          
+          elif [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+          base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
+          branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
             elif [[ $base_branch == 'qa' ]]; then
               if [[ $branch_name == 'develop' ]]; then
                 npm --no-git-tag-version version minor
