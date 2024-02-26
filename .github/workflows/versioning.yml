@@ -1,4 +1,4 @@
-name: Versioning 0
+name: Versioning
 
 on:
   pull_request:
