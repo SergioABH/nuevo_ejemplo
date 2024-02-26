@@ -2,15 +2,8 @@ name: Versioning
 
 on:
   pull_request:
-    branches:
-      - 'feat/*'
     types:
       - closed
-  push:
-    branches:
-      - 'feat/*'
-    paths-ignore:
-      - '!'
 
 jobs:
   version:
@@ -36,7 +29,7 @@ jobs:
       - name: Determine Version
         id: determine_version
         run: |
-          if [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+          if [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
             branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
@@ -66,17 +59,14 @@ jobs:
                 npm --no-git-tag-version version major
               fi
             fi
-
-            # Save the new version to a file for later use
-            version=$(npm --no-git-tag-version version)
-            echo $version > version.txt
-            echo "::set-output name=base_branch::$base_branch"
-            echo "::set-output name=branch_name::$branch_name"
           fi
+          
+          echo "::set-output name=base_branch::$base_branch"
+          echo "::set-output name=branch_name::$branch_name"
 
       - name: Get New Version
         id: get_version
-        run: echo "::set-output name=version::$(cat version.txt)"
+        run: echo "::set-output name=version::$(npm --no-git-tag-version version)"
 
       - name: Commit and Push Version Update
         run: |
@@ -95,19 +85,4 @@ jobs:
           git commit -am "Update version" || true
           git checkout $base_branch
           git push origin $base_branch --follow-tags || true        
-        shell: bash
-      
-      - name: Release on Push
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feat/')
-        run: |
-          version=$(cat version.txt)
-          npm --no-git-tag-version version prerelease --preid=0
-          git add .
-          git commit -am "Prerelease version for branch $GITHUB_REF" || true
-          git push origin $GITHUB_REF --follow-tags || true
-        shell: bash
-
-      - name: Merge to Develop
-        if: github.event_name == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' && ${{ steps.determine_version.outputs.base_branch }} == 'develop'
-        run: npm version minor && git add . && git commit -m "Version bump to $version" && git push origin develop --follow-tags
         shell: bash
