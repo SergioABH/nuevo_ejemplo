@@ -6,8 +6,6 @@ on:
       - main
       - qa
       - develop
-      - hotfix/*
-      - prerelease/*
 
 jobs:
   version:
@@ -32,18 +30,20 @@ jobs:
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
             branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
-            if [[ $base_branch == 'develop' || $base_branch == 'qa' ]]; then
-              if [[ $branch_name == 'qa' ]]; then
-                npm version minor
-              elif [[ $branch_name == 'main' ]]; then
-                npm version patch
-              elif [[ $branch_name == *feat/* ]]; then
+            if [[ $base_branch == 'develop' ]]; then
+              if [[ $branch_name == *feat/* ]]; then
                 npm --no-git-tag-version version preminor
               elif [[ $branch_name == *fix/* ]]; then
                 npm --no-git-tag-version version prepatch
-              elif [[ $branch_name == hotfix/* ]]; then
+              fi
+            elif [[ $base_branch == 'qa' ]]; then
+              if [[ $branch_name == 'develop' ]]; then
+                npm version minor
+              fi
+            elif [[ $base_branch == 'main' ]]; then
+              if [[ $branch_name == *hotfix/* ]]; then
                 npm --no-git-tag-version version patch
-              elif [[ $branch_name == prerelease/* ]]; then
+              elif [[ $branch_name == *prerelease/* ]]; then
                 npm --no-git-tag-version version prerelease --preid=rc
               fi
             fi
@@ -91,3 +91,4 @@ jobs:
           git checkout $base_branch
           git push origin $base_branch --follow-tags || true        
         shell: bash
+        
