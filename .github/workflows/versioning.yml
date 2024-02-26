@@ -43,6 +43,8 @@ jobs:
             elif [[ $base_branch == 'qa' ]]; then
               if [[ $branch_name == 'develop' ]]; then
                 npm --no-git-tag-version version minor
+              elif [[ $branch_name == *fix/* ]]; then
+                npm --no-git-tag-version version patch
               fi
             
             elif [[ $base_branch == *prerelease/* ]]; then
