@@ -33,9 +33,11 @@ jobs:
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
             branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
-            if [[ $base_branch == 'qa' && $branch_name == 'main' ]]; then
-              npm --no-git-tag-version version prerelease --preid=rc
+            if [[ $base_branch == 'main' ]]; then
+              if [[ $base_branch == 'qa' ]]; then
+                npm --no-git-tag-version version prerelease --preid=rc
             fi
+          fi
 
           elif [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
             base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
