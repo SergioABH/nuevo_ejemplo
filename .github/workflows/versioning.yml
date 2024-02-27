@@ -98,6 +98,9 @@ jobs:
           echo "Version: $version"
 
           git fetch origin $branch_name:$branch_name || true
+          git add .
+          git commit -m "Committing changes before switching branches"
+
           git checkout $branch_name || true
 
           git add .
