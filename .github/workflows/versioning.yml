@@ -131,6 +131,11 @@ jobs:
             fi
           fi
 
+      - name: Configure Git user
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+
       - name: Create hotfix branch with a commit
         run: |
           git checkout main
