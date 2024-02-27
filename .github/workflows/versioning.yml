@@ -68,6 +68,13 @@ jobs:
                 npm --no-git-tag-version version prerelease
               elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version patch
+            elif [[ $branch_name == *release/* ]]; then
+              if [[ ${{ github.event.action }} == 'opened' ]]; then
+                npm --no-git-tag-version version prerelease --preid=rc
+              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                npm --no-git-tag-version version prerelease --preid=rc
+              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+                npm --no-git-tag-version version major
               fi
             fi
           fi
