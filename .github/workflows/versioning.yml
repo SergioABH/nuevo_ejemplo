@@ -1,8 +1,13 @@
 name: Versioning
 
 on:
+  push:
+    branches:
+      - "hotfix/**"
   pull_request:
     types:
+      - opened
+      - synchronize
       - closed
 
 jobs:
@@ -29,38 +34,55 @@ jobs:
       - name: Determine Version
         id: determine_version
         run: |
-          if [[ $GITHUB_EVENT_NAME == 'pull_request' && ${{ github.event_name }} == 'pull_request' && ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
-            base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
-            branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
+          base_branch=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
+          branch_name=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
 
-            if [[ $base_branch == 'develop' ]]; then
-              if [[ $branch_name == *feat/* ]]; then
+          if [[ $base_branch == 'develop' ]]; then
+            if [[ $branch_name == *feat/* ]]; then
+              if [[ ${{ github.event.action }} == 'opened' ]]; then
                 npm --no-git-tag-version version preminor
-              elif [[ $branch_name == *fix/* ]]; then
-                npm --no-git-tag-version version prepatch
-              fi
-
-            elif [[ $base_branch == 'qa' ]]; then
-              if [[ $branch_name == 'develop' ]]; then
+              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                npm --no-git-tag-version version prerelease
+              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version minor
-              elif [[ $branch_name == *fix/* ]]; then
+              fi
+            elif [[ $branch_name == *fix/* ]]; then
+              if [[ ${{ github.event.action }} == 'opened' ]]; then
+                npm --no-git-tag-version version prepatch
+              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                npm --no-git-tag-version version prerelease
+              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version patch
               fi
-            
-            elif [[ $base_branch == *prerelease/* ]]; then
-              if [[ $branch_name == 'qa' ]]; then
+            fi
+          
+          elif [[ $base_branch == 'qa' ]]; then
+            if [[ $branch_name == 'develop' ]]; then
+              if [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+                npm --no-git-tag-version version minor
+              fi
+            fi
+          
+          elif [[ $base_branch == 'main' ]]; then
+            if [[ $branch_name == 'hotfix-branch' ]]; then
+              if [[ ${{ github.event.action }} == 'opened' ]]; then
+                npm --no-git-tag-version version prepatch
+              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                npm --no-git-tag-version version prerelease
+              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+                npm --no-git-tag-version version patch
+              fi
+            elif [[ $branch_name == *release/* ]]; then
+              if [[ ${{ github.event.action }} == 'opened' ]]; then
                 npm --no-git-tag-version version prerelease --preid=rc
-              fi
-
-            elif [[ $base_branch == 'main' ]]; then
-              if [[ $branch_name == *hotfix/* ]]; then
-                npm --no-git-tag-version version patch
-              elif [[ $branch_name == *prerelease/* ]]; then
+              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                npm --no-git-tag-version version prerelease --preid=rc
+              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version major
               fi
             fi
           fi
-          
+
           echo "::set-output name=base_branch::$base_branch"
           echo "::set-output name=branch_name::$branch_name"
 
@@ -77,7 +99,7 @@ jobs:
           echo "Base branch: $base_branch"
           echo "Branch name: $branch_name"
           echo "Version: $version"
-          
+
           git fetch origin $base_branch:$base_branch || true
           git checkout $base_branch || true
 
@@ -86,3 +108,43 @@ jobs:
           git checkout $base_branch
           git push origin $base_branch --follow-tags || true        
         shell: bash
+
+  hotfix:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Check if it's a pull request
+        run: |
+          if [ -n "$GITHUB_EVENT_PATH" ]; then
+            EVENT_TYPE=$(jq --raw-output .event_name "$GITHUB_EVENT_PATH")
+            IS_PULL_REQUEST=$(jq --raw-output .pull_request.url "$GITHUB_EVENT_PATH")
+
+            if [ "$EVENT_TYPE" == "pull_request" ] && [ "$IS_PULL_REQUEST" != "null" ]; then
+              echo "This is a pull request event. Skipping the hotfix pipeline."
+              exit 0
+            fi
+          fi
+
+      - name: Create hotfix branch
+        run: |
+          git checkout main
+          git pull origin main
+          git checkout -b hotfix-branch
+
+      - name: Push hotfix branch
+        run: |
+          git push origin hotfix-branch
+
+      - name: Open pull request with curl
+        run: |
+          PR_TITLE="Hotfix: Describe your hotfix here"
+          PR_BODY="Please review and merge this hotfix."
+
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
+            -d '{"title":"'"$PR_TITLE"'","body":"'"$PR_BODY"'","head":"hotfix-branch","base":"main"}' \
+            "https://api.github.com/repos/${{ github.repository }}/pulls"
