@@ -51,7 +51,6 @@ jobs:
             elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
               npm --no-git-tag-version version patch
             fi
-          fi
           
           elif [[ $base_branch == 'qa' ]]; then
             if [[ $branch_name == 'develop' ]]; then
