@@ -14,6 +14,8 @@ jobs:
   version:
     runs-on: ubuntu-latest
 
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_type == 'branch')
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -152,8 +154,8 @@ jobs:
 
       - name: Open pull request with curl
         run: |
-          PR_TITLE="Hotfix: Describe your hotfix here"
-          PR_BODY="Please review and merge this hotfix."
+          PR_TITLE="Hotfix"
+          PR_BODY=$(cat .github/pull_request_template.md)
 
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
