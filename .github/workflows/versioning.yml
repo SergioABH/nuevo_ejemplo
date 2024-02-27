@@ -1,6 +1,9 @@
 name: Versioning
 
 on:
+  push:
+    branches:
+      - "hotfix/**"
   pull_request:
     types:
       - opened
