@@ -1,4 +1,4 @@
-name: Versioning 2
+name: Versioning
 
 on:
   pull_request:
@@ -161,3 +161,4 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             -d '{"title":"'"$PR_TITLE"'","body":"'"$PR_BODY"'","head":"hotfix-branch","base":"main"}' \
             "https://api.github.com/repos/${{ github.repository }}/pulls"
+            
