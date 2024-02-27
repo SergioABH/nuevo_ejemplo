@@ -1,4 +1,4 @@
-name: Versioning 2
+name: Versioning
 
 on:
   pull_request:
@@ -69,9 +69,17 @@ jobs:
               elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
                 npm --no-git-tag-version version patch
               fi
+            elif [[ $branch_name == *release/* ]]; then
+              if [[ ${{ github.event.action }} == 'opened' ]]; then
+                npm --no-git-tag-version version prerelease --preid=rc
+              elif [[ ${{ github.event.action }} == 'synchronize' ]]; then
+                npm --no-git-tag-version version prerelease --preid=rc
+              elif [[ ${{ github.event.action }} == 'closed' && ${{ github.event.pull_request.merged }} == 'true' ]]; then
+                npm --no-git-tag-version version major
+              fi
             fi
           fi
-          
+
           echo "::set-output name=base_branch::$base_branch"
           echo "::set-output name=branch_name::$branch_name"
 
@@ -88,7 +96,7 @@ jobs:
           echo "Base branch: $base_branch"
           echo "Branch name: $branch_name"
           echo "Version: $version"
-          
+
           git fetch origin $base_branch:$base_branch || true
           git checkout $base_branch || true
 
