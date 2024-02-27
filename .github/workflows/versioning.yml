@@ -105,3 +105,12 @@ jobs:
           git checkout $base_branch
           git push origin $base_branch --follow-tags || true        
         shell: bash
+
+      - name: Create Pull Request
+        uses: actions/create-pull-request@v4
+        with:
+          title: "Hotfix: Actualización de versión"
+          body: "Esta pull request actualiza la versión del proyecto a **${{ steps.get_version.outputs.version }}** para corregir un problema urgente."
+          base: main
+          head: ${{ github.ref }}
+      
