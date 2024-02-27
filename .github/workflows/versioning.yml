@@ -131,11 +131,15 @@ jobs:
             fi
           fi
 
-      - name: Create hotfix branch
+      - name: Create hotfix branch with a commit
         run: |
           git checkout main
           git pull origin main
           git checkout -b hotfix-branch
+          echo "Hotfix commit" >> hotfix-file.txt
+          git add .
+          git commit -m "Hotfix commit"
+          git push origin hotfix-branch
 
       - name: Push hotfix branch
         run: |
