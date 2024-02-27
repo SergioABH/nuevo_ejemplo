@@ -155,12 +155,8 @@ jobs:
       - name: Open pull request with curl
         run: |
           PR_TITLE="Hotfix"
-          PR_BODY=$(cat .github/pull_request_template.md | jq -s -R '@json')
-
-          echo "PR_TITLE: $PR_TITLE"
-          echo "PR_BODY: $PR_BODY"
 
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -d '{"title":"'"$PR_TITLE"'","body":"'"$PR_BODY"'","head":"hotfix-branch","base":"main"}' \
+            -d '{"title":"'"$PR_TITLE"'","head":"hotfix-branch","base":"main"}' \
             "https://api.github.com/repos/${{ github.repository }}/pulls"
