@@ -14,7 +14,7 @@ jobs:
   version:
     runs-on: ubuntu-latest
 
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_type == 'branch')
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_type == 'branch' && github.ref != 'refs/heads/main')
 
     steps:
       - name: Checkout Repository
@@ -155,10 +155,12 @@ jobs:
       - name: Open pull request with curl
         run: |
           PR_TITLE="Hotfix"
-          PR_BODY=$(cat .github/pull_request_template.md)
+          PR_BODY=$(cat .github/pull_request_template.md | jq -s -R '.')
+
+          echo "PR_TITLE: $PR_TITLE"
+          echo "PR_BODY: $PR_BODY"
 
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             -d '{"title":"'"$PR_TITLE"'","body":"'"$PR_BODY"'","head":"hotfix-branch","base":"main"}' \
             "https://api.github.com/repos/${{ github.repository }}/pulls"
-            
